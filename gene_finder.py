@@ -29,8 +29,6 @@ def get_complement(nucleotide):
         The two added unit tests test the other two possible inputs that the
         function will handle. That means every viable input is tested
 
-        The last unit test makes sure that the funciton doesnt have a fit if it
-        gets a character that it shouldn't
     >>> get_complement('A')
     'T'
     >>> get_complement('C')
@@ -39,19 +37,11 @@ def get_complement(nucleotide):
     'C'
     >>> get_complement('T')
     'A'
-    >>> get_complement('B')
 
     """
-    if nucleotide == 'A':
-        return 'T'
-    elif nucleotide == 'T':
-        return 'A'
-    elif nucleotide == 'G':
-        return 'C'
-    elif nucleotide == 'C':
-        return 'G'
-    else:
-        return None
+    complements = {'A': 'T', 'G': 'C', 'T': 'A', 'C': 'G'}
+
+    return complements[nucleotide]
 
 
 def get_reverse_complement(dna):
@@ -178,11 +168,21 @@ def find_all_ORFs_both_strands(dna):
 def longest_ORF(dna):
     """ Finds the longest ORF on both strands of the specified DNA and returns it
         as a string
+
+       Just addedd another unit test to make sure it can get the longest strand
+       from both strands
     >>> longest_ORF("ATGCGAATGTAGCATCAAA")
     'ATGCTACATTCGCAT'
+
+    >>> longest_ORF("CCATGCTACCCTTTTAACCGT")
+    'ATGCTACCCTTT'
     """
-    # TODO: implement this
-    pass
+    allStrands = find_all_ORFs_both_strands(dna)
+    indexOfLongORF = 0
+    for index in range(1, len(allStrands)):
+        if len(allStrands[index]) > len(allStrands[index-1]):
+            indexOfLongORF = index
+    return allStrands[indexOfLongORF]
 
 
 def longest_ORF_noncoding(dna, num_trials):
@@ -192,8 +192,17 @@ def longest_ORF_noncoding(dna, num_trials):
         dna: a DNA sequence
         num_trials: the number of random shuffles
         returns: the maximum length longest ORF """
-    # TODO: implement this
-    pass
+    lengthOfLongest = 0
+    index = 0
+    while index < num_trials:
+        shuffledDna = shuffle_string(dna)
+        longest = longest_ORF(shuffledDna)
+        if len(longest) > lengthOfLongest:
+            lengthOfLongest = len(longest)
+        # print len(longest)
+        index += 1
+
+    return lengthOfLongest
 
 
 def coding_strand_to_AA(dna):
@@ -205,13 +214,19 @@ def coding_strand_to_AA(dna):
         returns: a string containing the sequence of amino acids encoded by the
                  the input DNA fragment
 
+        I can't make more unit tests because I don't know the amino acids
+
         >>> coding_strand_to_AA("ATGCGA")
         'MR'
         >>> coding_strand_to_AA("ATGCCCGCTTT")
         'MPA'
     """
-    # TODO: implement this
-    pass
+    index = 3
+    aminoAcids = ''
+    while index <= len(dna):
+        aminoAcids += aa_table[dna[index-3:index]]
+        index += 3
+    return aminoAcids
 
 
 def gene_finder(dna):
@@ -219,11 +234,23 @@ def gene_finder(dna):
 
         dna: a DNA sequence
         returns: a list of all amino acid sequences coded by the sequence dna.
+
     """
-    # TODO: implement this
-    pass
+    aminoSequence = []
+
+    threshold = longest_ORF_noncoding(dna, 1500)
+
+    openFrames = find_all_ORFs_both_strands(dna)
+
+    for strand in openFrames:
+        if len(strand) > threshold:
+            aminoSequence.append(coding_strand_to_AA(strand))
+
+    return aminoSequence
 
 
 if __name__ == "__main__":
+    from load import load_seq
+    dna = load_seq("./data/X73525.fa")
     import doctest
     doctest.testmod()
